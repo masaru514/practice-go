@@ -2,7 +2,6 @@ package main
 
 import (
 	"flag"
-	"fmt"
 	"html/template"
 	"log"
 	"net/http"
@@ -16,24 +15,25 @@ var upgrader = websocket.Upgrader{}
 
 func echo(w http.ResponseWriter, r *http.Request) {
 	// c websokectへの接続
-	connect, err := upgrader.Upgrade(w, r, nil)
+	conn, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
 		log.Print("upgrade:", err)
 		return
 	}
-	defer connect.Close()
+	log.Printf("%v", w)
+	messageType, message, err := conn.ReadMessage()
+	err = conn.WriteMessage(messageType, message)
+	defer conn.Close()
 
 	for {
-		messageType, message, err := connect.ReadMessage()
+		messageType, p, err := conn.ReadMessage()
 		if err != nil {
-			log.Println("read:", err)
-			break
+			log.Println(err)
+			return
 		}
-		log.Printf("recv: %s", message)
-		err = connect.WriteMessage(messageType, message)
-		if err != nil {
-			log.Println("write", err)
-			break
+		if err := conn.WriteMessage(messageType, p); err != nil {
+			log.Println(err)
+			return
 		}
 	}
 }
@@ -49,11 +49,6 @@ func main() {
 	http.HandleFunc("/echo", echo)
 	http.HandleFunc("/", home)
 	log.Fatal(http.ListenAndServe(*address, nil))
-}
-
-// initはファイル呼び出し時に実行される
-func init() {
-	fmt.Printf("Started!")
 }
 
 var homeTemplate = template.Must(template.New("").Parse(`
