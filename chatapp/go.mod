@@ -1,3 +1,3 @@
-module exmaple.com/api
+module example.com/chatapp
 
 go 1.16
