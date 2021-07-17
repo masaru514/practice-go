@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"html/template"
 	"io/ioutil"
 	"log"
@@ -32,6 +33,7 @@ func loadPage(title string) (*Page, error) {
 }
 
 // なぜ第３引数に型指定してるのにnilを許容する・・・？
+// →初期値はnilとPageコンストラクタの型を定義した?
 func renderTemplate(w http.ResponseWriter, tmpl string, p *Page) {
 	err := templates.ExecuteTemplate(w, tmpl+".html", p)
 	if err != nil {
@@ -88,9 +90,25 @@ func frontHanlder(w http.ResponseWriter, r *http.Request) {
 	renderTemplate(w, "front", nil)
 }
 
+// 作成されている.txtファイルへのアクセスをまとめる
+func dataHandler(w http.ResponseWriter, r *http.Request) {
+	files, err := ioutil.ReadDir(".")
+	if err != nil {
+		log.Fatal(err)
+	}
+	var filesName []string
+	for _, file := range files {
+		filesName = append(filesName, file.Name())
+	}
+	fmt.Printf("%v", filesName)
+
+}
+
 func main() {
+
 	http.HandleFunc("/", redirectFrontPage)
 	http.HandleFunc("/frontPage", frontHanlder)
+	http.HandleFunc("/data", dataHandler)
 	http.HandleFunc("/view/", makeHandler(viewHandler))
 	http.HandleFunc("/edit/", makeHandler(editHandler))
 	http.HandleFunc("/save/", makeHandler(saveHandler))
