@@ -7,9 +7,10 @@ import (
 	"log"
 	"net/http"
 	"regexp"
+	"strings"
 )
 
-var templates = template.Must(template.ParseFiles("edit.html", "view.html", "front.html"))
+var templates = template.Must(template.ParseFiles("edit.html", "view.html", "front.html", "data.html"))
 
 var validPath = regexp.MustCompile("^/(edit|save|view)/([a-zA-Z0-9]+)$")
 
@@ -24,7 +25,10 @@ func (p *Page) save() error {
 }
 
 func loadPage(title string) (*Page, error) {
+	title = strings.Replace(title, ".txt", "", 1)
 	filename := title + ".txt"
+	fmt.Printf("loadPagefunc: %v", filename)
+
 	body, err := ioutil.ReadFile(filename)
 	if err != nil {
 		return nil, err
@@ -39,6 +43,18 @@ func renderTemplate(w http.ResponseWriter, tmpl string, p *Page) {
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
+}
+
+func renderTemplateForSlice(w http.ResponseWriter, tmpl string, p []*Page) {
+	fmt.Printf("%v", p)
+
+	for _, file := range p {
+		err := templates.ExecuteTemplate(w, tmpl+".html", file)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+		}
+	}
+
 }
 
 func viewHandler(w http.ResponseWriter, r *http.Request, title string) {
@@ -87,6 +103,7 @@ func redirectFrontPage(w http.ResponseWriter, r *http.Request) {
 }
 
 func frontHanlder(w http.ResponseWriter, r *http.Request) {
+	fmt.Printf("initial?")
 	renderTemplate(w, "front", nil)
 }
 
@@ -96,19 +113,31 @@ func dataHandler(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Fatal(err)
 	}
-	var filesName []string
+	var textFiles []*Page
 	for _, file := range files {
-		filesName = append(filesName, file.Name())
-	}
-	fmt.Printf("%v", filesName)
+		fmt.Println(file.Name())
 
+		unnecessaryFilesName := strings.Contains(file.Name(), ".html")
+		ufn := strings.Contains(file.Name(), ".go")
+		if unnecessaryFilesName && ufn {
+			break
+		}
+		p, err := loadPage(file.Name())
+		fmt.Printf("for loadPage?:%v", p)
+		if err != nil {
+			return
+		}
+		textFiles = append(textFiles, p)
+	}
+	fmt.Printf("isTextFiles?:%v", textFiles)
+	renderTemplateForSlice(w, "data", textFiles)
 }
 
 func main() {
 
 	http.HandleFunc("/", redirectFrontPage)
-	http.HandleFunc("/frontPage", frontHanlder)
-	http.HandleFunc("/data", dataHandler)
+	http.HandleFunc("/frontPage/", frontHanlder)
+	http.HandleFunc("/data/", dataHandler)
 	http.HandleFunc("/view/", makeHandler(viewHandler))
 	http.HandleFunc("/edit/", makeHandler(editHandler))
 	http.HandleFunc("/save/", makeHandler(saveHandler))
