@@ -118,7 +118,8 @@ func dataHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	var textFiles []*Page
 	for _, file := range files {
-		p, err := loadPage(file.Name())
+		replaceText := strings.Replace(file.Name(), ".txt", "", 1)
+		p, err := loadPage(replaceText)
 		if err != nil {
 			fmt.Printf("data HandlerdeでErrorが発生している")
 			return
@@ -130,7 +131,6 @@ func dataHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
-
 	http.HandleFunc("/", redirectFrontPage)
 	http.HandleFunc("/frontPage/", frontHandler)
 	http.HandleFunc("/data/", dataHandler)

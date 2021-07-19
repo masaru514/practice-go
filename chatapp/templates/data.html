@@ -2,6 +2,9 @@
 <p>choose a link for your likes</p>
 
 {{range .}}
-<p>{{.Title}} </p>
-<p>{{printf "%s" .Body}}</p>
+<div style="padding-bottom: 20px">
+<h2 style="margin: 0">{{.Title}} </h2>
+<div>{{printf "%s" .Body}}</div>
+<a href="/view/{{.Title}}">Click here If you wanna edit</a>
+</div>
 {{end}}
