@@ -10,7 +10,7 @@ import (
 	"strings"
 )
 
-var templates = template.Must(template.ParseFiles("edit.html", "view.html", "front.html", "data.html"))
+var templates = template.Must(template.ParseFiles("templates/edit.html", "templates/view.html", "templates/front.html", "templates/data.html"))
 
 var validPath = regexp.MustCompile("^/(edit|save|view)/([a-zA-Z0-9]+)$")
 
@@ -25,15 +25,22 @@ func (p *Page) save() error {
 }
 
 func loadPage(title string) (*Page, error) {
-	title = strings.Replace(title, ".txt", "", 1)
-	filename := title + ".txt"
-	fmt.Printf("loadPagefunc: %v", filename)
+	filename := title
+	if strings.Contains(title, ".txt") {
+		body, err := ioutil.ReadFile("./textFiles/" + filename)
+		fmt.Printf("LOG %v", body)
 
-	body, err := ioutil.ReadFile(filename)
-	if err != nil {
-		return nil, err
+		if err != nil {
+			return nil, err
+		}
+		return &Page{Title: title, Body: body}, nil
+	} else {
+		body, err := ioutil.ReadFile("./textFiles/" + filename + ".txt")
+		if err != nil {
+			return nil, err
+		}
+		return &Page{Title: title, Body: body}, nil
 	}
-	return &Page{Title: title, Body: body}, nil
 }
 
 // なぜ第３引数に型指定してるのにnilを許容する・・・？
@@ -46,7 +53,7 @@ func renderTemplate(w http.ResponseWriter, tmpl string, p *Page) {
 }
 
 func renderTemplateForSlice(w http.ResponseWriter, tmpl string, p []*Page) {
-	fmt.Printf("%v", p)
+	// fmt.Printf("multi render temp: %v", p)
 
 	for _, file := range p {
 		err := templates.ExecuteTemplate(w, tmpl+".html", file)
@@ -63,6 +70,7 @@ func viewHandler(w http.ResponseWriter, r *http.Request, title string) {
 		http.Redirect(w, r, "/edit/"+title, http.StatusFound)
 		return
 	}
+
 	renderTemplate(w, "view", p)
 }
 
@@ -102,41 +110,34 @@ func redirectFrontPage(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, "/frontPage", http.StatusFound)
 }
 
-func frontHanlder(w http.ResponseWriter, r *http.Request) {
-	fmt.Printf("initial?")
+func frontHandler(w http.ResponseWriter, r *http.Request) {
 	renderTemplate(w, "front", nil)
 }
 
 // 作成されている.txtファイルへのアクセスをまとめる
 func dataHandler(w http.ResponseWriter, r *http.Request) {
-	files, err := ioutil.ReadDir(".")
+	files, err := ioutil.ReadDir("./textFiles/")
 	if err != nil {
 		log.Fatal(err)
 	}
 	var textFiles []*Page
 	for _, file := range files {
-		fmt.Println(file.Name())
-
-		unnecessaryFilesName := strings.Contains(file.Name(), ".html")
-		ufn := strings.Contains(file.Name(), ".go")
-		if unnecessaryFilesName && ufn {
-			break
-		}
 		p, err := loadPage(file.Name())
-		fmt.Printf("for loadPage?:%v", p)
 		if err != nil {
 			return
 		}
+		fmt.Printf("%v", p)
 		textFiles = append(textFiles, p)
 	}
-	fmt.Printf("isTextFiles?:%v", textFiles)
 	renderTemplateForSlice(w, "data", textFiles)
+	// fmt.Printf("slice TextFiled?: %v", textFiles)
+
 }
 
 func main() {
 
 	http.HandleFunc("/", redirectFrontPage)
-	http.HandleFunc("/frontPage/", frontHanlder)
+	http.HandleFunc("/frontPage/", frontHandler)
 	http.HandleFunc("/data/", dataHandler)
 	http.HandleFunc("/view/", makeHandler(viewHandler))
 	http.HandleFunc("/edit/", makeHandler(editHandler))
