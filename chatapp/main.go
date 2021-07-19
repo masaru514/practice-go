@@ -52,6 +52,8 @@ func renderTemplate(w http.ResponseWriter, tmpl string, p *Page) {
 }
 
 func renderTemplateForSlice(w http.ResponseWriter, tmpl string, p []*Page) {
+	// excecuteTemplateはスライス構造体を渡せる
+	// template htmlはh1がないとhtmlとして判定されない.... (知らなかった)
 	err := templates.ExecuteTemplate(w, tmpl+".html", p)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
