@@ -28,7 +28,6 @@ func loadPage(title string) (*Page, error) {
 	filename := title
 	if strings.Contains(title, ".txt") {
 		body, err := ioutil.ReadFile("./textFiles/" + filename)
-		fmt.Printf("LOG %v", body)
 
 		if err != nil {
 			return nil, err
@@ -53,8 +52,6 @@ func renderTemplate(w http.ResponseWriter, tmpl string, p *Page) {
 }
 
 func renderTemplateForSlice(w http.ResponseWriter, tmpl string, p []*Page) {
-	// fmt.Printf("multi render temp: %v", p)
-
 	for _, file := range p {
 		err := templates.ExecuteTemplate(w, tmpl+".html", file)
 		if err != nil {
@@ -124,13 +121,12 @@ func dataHandler(w http.ResponseWriter, r *http.Request) {
 	for _, file := range files {
 		p, err := loadPage(file.Name())
 		if err != nil {
+			fmt.Printf("data HandlerdeでErrorが発生している")
 			return
 		}
-		fmt.Printf("%v", p)
 		textFiles = append(textFiles, p)
 	}
 	renderTemplateForSlice(w, "data", textFiles)
-	// fmt.Printf("slice TextFiled?: %v", textFiles)
 
 }
 
