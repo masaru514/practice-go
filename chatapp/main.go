@@ -52,13 +52,10 @@ func renderTemplate(w http.ResponseWriter, tmpl string, p *Page) {
 }
 
 func renderTemplateForSlice(w http.ResponseWriter, tmpl string, p []*Page) {
-	for _, file := range p {
-		err := templates.ExecuteTemplate(w, tmpl+".html", file)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-		}
+	err := templates.ExecuteTemplate(w, tmpl+".html", p)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
-
 }
 
 func viewHandler(w http.ResponseWriter, r *http.Request, title string) {

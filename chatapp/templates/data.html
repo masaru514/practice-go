@@ -1,5 +1,7 @@
-<h2>Text Files Data Here.</h2>
+<h1>Text Files Data Here.</h1>
 <p>choose a link for your likes</p>
 
+{{range .}}
 <p>{{.Title}} </p>
 <p>{{printf "%s" .Body}}</p>
+{{end}}
