@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"html/template"
 	"log"
 	"net/http"
 
@@ -39,7 +40,7 @@ func reader(conn *websocket.Conn) {
 			log.Println(err)
 			return
 		}
-		fmt.Println(string(p))
+		fmt.Println("Read browser position", string(p))
 
 		if err := conn.WriteMessage(messageType, p); err != nil {
 			log.Println(err)
@@ -48,13 +49,23 @@ func reader(conn *websocket.Conn) {
 	}
 }
 
+var templates = template.Must(template.ParseFiles("templates/canvas.html"))
+
+func renderCanvas(w http.ResponseWriter, r *http.Request) {
+	err := templates.ExecuteTemplate(w, "canvas.html", nil)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
+}
+
 func setupRoutes() {
 	http.HandleFunc("/", homePage)
 	http.HandleFunc("/ws", wsEndpoint)
+	http.HandleFunc("/html", renderCanvas)
 }
 
 func main() {
-	fmt.Printf("hello world")
+	fmt.Printf("server started")
 	setupRoutes()
 	log.Fatal(http.ListenAndServe(":8080", nil))
 }
