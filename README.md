@@ -8,7 +8,7 @@
 
 ### 2021/07/16 ~ WebSocketよくわからない＋基礎わからないためチャットツール開発停止 
 
-### 同日 Web Server Application チュートリアル中 〜
+### ~ 2021/07/18 Web Server Application チュートリアル中 〜
 
 ### ~ 2021/07/24 Web Server Application チュートリアル終了
 
