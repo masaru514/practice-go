@@ -41,6 +41,7 @@ func reader(conn *websocket.Conn) {
 			return
 		}
 		fmt.Println("Read browser position", string(p))
+		fmt.Printf("%v", websocket.TextMessage)
 
 		if err := conn.WriteMessage(messageType, p); err != nil {
 			log.Println(err)

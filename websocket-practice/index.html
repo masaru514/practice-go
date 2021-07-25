@@ -8,7 +8,10 @@
   </head>
   <body>
     <h2>Hello World</h2>
-    <canvas id="canvas"></canvas>
+    <ul id="list">
+      <li></li>
+    </ul>
+    <button>ボタン</button>
 
     <script>
         let socket = new WebSocket("ws://localhost:8080/ws");
@@ -28,36 +31,19 @@
             console.log("Socket Error: ", error);
         };
 
-        const canvas = document.getElementById("canvas");
-        const ctx = canvas.getContext('2d');
-        let x = 0;
-        let y = 0;
-
-        function drawCircle() {
-          ctx.clearRect(0, 0, canvas.width, canvas.height)
-          ctx.beginPath();
-          ctx.strokeStyle = 'black';
-          ctx.fillStyle="red"
-          // console.log(x,y) //座標
-          ctx.arc(x, y, 10, 0, Math.PI*2, false);
-          ctx.stroke();
-          ctx.closePath();
-        }
-        ctx && drawCircle(ctx)
-
-        canvas.addEventListener('mousemove', e => {
-          // console.log("add lines") // test
-          // drawLine(ctx, x, y, e.offsetX, e.offsetY);
-          x = e.offsetX;
-          y = e.offsetY;
-          drawCircle(ctx)
-          socket.send(x)
-        });
-
         socket.onmessage = (e) => {
+          console.log("aa")
+          const list = document.getElementById("list")
+          const create = document.createElement("li")
+          create.textContent = e.data
           console.log(e.data)
-          drawCircle(ctx)
+          list.appendChild(create)
         }
+
+        const button = document.querySelector("button")
+        button.addEventListener("click", e => {
+          socket.send("hello~")
+        })
 
     </script>
   </body>
