@@ -8,12 +8,14 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
+	"os"
 	"strings"
 	"time"
 
 	"github.com/PuerkitoBio/goquery"
 	"github.com/chromedp/cdproto/dom"
 	"github.com/chromedp/chromedp"
+	"github.com/joho/godotenv"
 )
 
 func GetHttpHtmlContent(url string, sel interface{}) (string, error) {
@@ -64,7 +66,7 @@ const scrapeBaseUrl = "https://www.nike.com/jp/launch?s=in-stock"
 
 const yahooScrape = "https://chiebukuro.yahoo.co.jp/"
 
-func ExampleScrape() {
+func ExampleScrape(endpoint string) {
 	res, err := GetHttpHtmlContent(yahooScrape, "body")
 
 	if err != nil {
@@ -75,7 +77,7 @@ func ExampleScrape() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	YahooScrape(doc)
+	YahooScrape(doc, endpoint)
 
 	doc.Find("aside ul li").Each(func(i int, s *goquery.Selection) {
 		// fmt.Print(s.Html())
@@ -87,13 +89,11 @@ func ExampleScrape() {
 	})
 }
 
-const endpoint = "https://discord.com/api/webhooks/860020793588449312/GKiCb6aDqQKoYnLy7Smishignvd4cT6lnVmOYoNWGkheRAFh00k_MpfusWRWxlAtYcoD"
-
 type Discord struct {
 	Content string `json:"content"`
 }
 
-func SendDiscord(link string) {
+func SendDiscord(link string, endpoint string) {
 	// discord webhook limit avoided
 	time.Sleep(250 * time.Millisecond)
 	reqBody := &Discord{
@@ -125,22 +125,28 @@ func SendDiscord(link string) {
 	fmt.Printf("%#v", string(byteArray))
 }
 
-func BasePageScrape(doc *goquery.Document) {
+func BasePageScrape(doc *goquery.Document, endpoint string) {
 	doc.Find("figure").Each(func(i int, s *goquery.Selection) {
 		link, _ := s.Find("a").Attr("href")
-		SendDiscord(link)
+		SendDiscord(link, endpoint)
 		fmt.Println(link)
 	})
 }
 
-func YahooScrape(doc *goquery.Document) {
+func YahooScrape(doc *goquery.Document, endpoint string) {
 	doc.Find("#all_rnk div li").Each(func(i int, s *goquery.Selection) {
 		title := s.Text()
-		SendDiscord(title)
+		SendDiscord(title, endpoint)
 		fmt.Println(title)
 	})
 }
 
 func main() {
-	ExampleScrape()
+	err := godotenv.Load(fmt.Sprintf("../%s.env", os.Getenv("GO_DISCORD_WEBHOOK")))
+	if err != nil {
+		fmt.Printf("error! dotenv file")
+	}
+
+	DISCORD_WEBHOOK := os.Getenv("DISCORD_WEBHOOK")
+	ExampleScrape(DISCORD_WEBHOOK)
 }
