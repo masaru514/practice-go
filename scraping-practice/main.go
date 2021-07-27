@@ -62,8 +62,10 @@ const scrapeBaseUrl = "https://www.nike.com/jp/launch?s=in-stock"
 
 // const nextScrape = "https://www.nike.com/jp/launch/t/off-white-apparel-collection-fa21"
 
+const yahooScrape = "https://chiebukuro.yahoo.co.jp/"
+
 func ExampleScrape() {
-	res, err := GetHttpHtmlContent(scrapeBaseUrl, "body")
+	res, err := GetHttpHtmlContent(yahooScrape, "body")
 
 	if err != nil {
 		log.Fatal(err)
@@ -73,7 +75,7 @@ func ExampleScrape() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	BasePageScrape(doc)
+	YahooScrape(doc)
 
 	doc.Find("aside ul li").Each(func(i int, s *goquery.Selection) {
 		// fmt.Print(s.Html())
@@ -92,6 +94,8 @@ type Discord struct {
 }
 
 func SendDiscord(link string) {
+	// discord webhook limit avoided
+	time.Sleep(250 * time.Millisecond)
 	reqBody := &Discord{
 		Content: link,
 	}
@@ -126,6 +130,14 @@ func BasePageScrape(doc *goquery.Document) {
 		link, _ := s.Find("a").Attr("href")
 		SendDiscord(link)
 		fmt.Println(link)
+	})
+}
+
+func YahooScrape(doc *goquery.Document) {
+	doc.Find("#all_rnk div li").Each(func(i int, s *goquery.Selection) {
+		title := s.Text()
+		SendDiscord(title)
+		fmt.Println(title)
 	})
 }
 
