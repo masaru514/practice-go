@@ -1,9 +1,13 @@
 package main
 
 import (
+	"bytes"
 	"context"
+	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"log"
+	"net/http"
 	"strings"
 	"time"
 
@@ -55,10 +59,11 @@ func GetHttpHtmlContent(url string, sel interface{}) (string, error) {
 }
 
 const scrapeBaseUrl = "https://www.nike.com/jp/launch?s=in-stock"
-const nextScrape = "https://www.nike.com/jp/launch/t/off-white-apparel-collection-fa21"
+
+// const nextScrape = "https://www.nike.com/jp/launch/t/off-white-apparel-collection-fa21"
 
 func ExampleScrape() {
-	res, err := GetHttpHtmlContent("https://www.nike.com/jp/launch/t/off-white-apparel-collection-fa21", "body")
+	res, err := GetHttpHtmlContent(scrapeBaseUrl, "body")
 
 	if err != nil {
 		log.Fatal(err)
@@ -68,6 +73,7 @@ func ExampleScrape() {
 	if err != nil {
 		log.Fatal(err)
 	}
+	BasePageScrape(doc)
 
 	doc.Find("aside ul li").Each(func(i int, s *goquery.Selection) {
 		// fmt.Print(s.Html())
@@ -76,6 +82,50 @@ func ExampleScrape() {
 		title := s.Find("button[disabled!='']").Text()
 		fmt.Println(title)
 		// fmt.Printf("Review %d: %s\n", i, title)
+	})
+}
+
+const endpoint = "https://discord.com/api/webhooks/860020793588449312/GKiCb6aDqQKoYnLy7Smishignvd4cT6lnVmOYoNWGkheRAFh00k_MpfusWRWxlAtYcoD"
+
+type Discord struct {
+	Content string `json:"content"`
+}
+
+func SendDiscord(link string) {
+	reqBody := &Discord{
+		Content: link,
+	}
+	jsonString, err := json.Marshal(reqBody)
+	if err != nil {
+		panic("Cannot Send for reason json")
+	}
+
+	req, err := http.NewRequest("POST", endpoint, bytes.NewBuffer(jsonString))
+	if err != nil {
+		panic("Error: request")
+	}
+
+	req.Header.Set("Content-Type", "application/json")
+	client := new(http.Client)
+	resp, err := client.Do(req)
+	if err != nil {
+		panic("Error")
+	}
+	defer resp.Body.Close()
+
+	byteArray, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		panic("Error")
+	}
+
+	fmt.Printf("%#v", string(byteArray))
+}
+
+func BasePageScrape(doc *goquery.Document) {
+	doc.Find("figure").Each(func(i int, s *goquery.Selection) {
+		link, _ := s.Find("a").Attr("href")
+		SendDiscord(link)
+		fmt.Println(link)
 	})
 }
 
