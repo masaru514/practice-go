@@ -54,8 +54,11 @@ func GetHttpHtmlContent(url string, sel interface{}) (string, error) {
 	return htmlContent, nil
 }
 
+const scrapeBaseUrl = "https://www.nike.com/jp/launch?s=in-stock"
+const nextScrape = "https://www.nike.com/jp/launch/t/off-white-apparel-collection-fa21"
+
 func ExampleScrape() {
-	res, err := GetHttpHtmlContent("https://chiebukuro.yahoo.co.jp/", "body")
+	res, err := GetHttpHtmlContent("https://www.nike.com/jp/launch/t/off-white-apparel-collection-fa21", "body")
 
 	if err != nil {
 		log.Fatal(err)
@@ -65,13 +68,14 @@ func ExampleScrape() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	fmt.Printf("%v", doc.Find("#all_rnk"))
 
-	doc.Find("#all_rnk").Each(func(i int, s *goquery.Selection) {
-		fmt.Printf("%v", s)
+	doc.Find("aside ul li").Each(func(i int, s *goquery.Selection) {
+		// fmt.Print(s.Html())
 		//  ClapLv1TextBlock_Chie-TextBlock__Text--clamp2__1UeI0
-		title := s.Find("div").Text()
-		fmt.Printf("Review %d: %s\n", i, title)
+		// title, exists := s.Find("a").Attr("href")
+		title := s.Find("button[disabled!='']").Text()
+		fmt.Println(title)
+		// fmt.Printf("Review %d: %s\n", i, title)
 	})
 }
 
